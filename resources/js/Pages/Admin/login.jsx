@@ -32,7 +32,7 @@ const LoginForm = () => {
             alert(response.data.message);
             console.log('Logged in user:', response.data.user);
             // Redirect to dashboard or handle successful login
-            window.location.href = '/admin';
+            window.location.href = 'https://banking.nikatby.com/admin/public/admin';
         } catch (error) {
             setError(error.response?.data?.error || 'An unexpected error occurred');
         }
