@@ -8,7 +8,7 @@ import {
 
 console.log(import.meta.env.VITE_APP_SERVER);
 const BASE_URL = import.meta.env.VITE_APP_SERVER === "PRODUCTION" 
-  ? "https://uat.nikatby.in/admin/public" 
+  ? "https://banking.nikatby.com/admin/public" 
   : "http://127.0.0.1:8000";
 
 console.log(BASE_URL);

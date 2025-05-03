@@ -2,6 +2,12 @@ import React, { useState } from 'react';
 import axios from 'axios';
 
 const LoginForm = () => {
+
+    // Define the base URL based on the environment
+    const BASE_URL = import.meta.env.VITE_APP_SERVER === "PRODUCTION"
+        ? "https://banking.nikatby.com/admin/public"
+        : "http://127.0.0.1:8000";
+
     const [formData, setFormData] = useState({
         email: '',
         password: '',
@@ -18,7 +24,7 @@ const LoginForm = () => {
         setError(null);
 
         try {
-            const response = await axios.post('/login', formData, {
+            const response = await axios.post(`${BASE_URL}/login`, formData, {
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
                 },
