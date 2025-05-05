@@ -304,7 +304,7 @@ export async function getdmtbank2data() {
 
 export async function getlicdata() {
     try {
-        const res = await axios.post(`${BASE_URL}/admin/lic_data`);
+        const res = await axios.post(`${BASE_URL}/admin/lic/fetch`);
         return res.data.data;
     } catch (error) {
         console.error('Error fetching roles:', error.response?.data || error.message);

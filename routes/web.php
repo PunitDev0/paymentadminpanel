@@ -101,7 +101,7 @@ Route::middleware('auth:web')->prefix('admin')->group(function () {
     Route::post('/roles/{id}/permissions', [MainController::class, 'updateRolePermissions'])->name('admin.roles.permissions.update');
 
     // DMT Bank Routes
-    Route::get('/dmt/bank-2', [DMTbankController::class, 'dmt2dashboard'])->name('admin.dmt2.dashboard');
+    Route::get('/dmt-bank-2', [DMTbankController::class, 'dmt2dashboard'])->name('admin.dmt2.dashboard');
     Route::post('/dmt/bank-2/fetch', [DMTbankController::class, 'fetchdmt2'])->name('admin.dmt2.fetch');
 
     // LIC Routes

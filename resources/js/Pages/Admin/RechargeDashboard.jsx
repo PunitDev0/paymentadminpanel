@@ -20,11 +20,9 @@ const RechargeDashboard = () => {
     setLoading(true);
     try {
       const operatorResponse = await OperatorList();
-      console.log('Fetched Operators:', operatorResponse.data.data);
       setOperators(operatorResponse.data.data);
 
       const transactionResponse = await Recharge_Transaction();
-      console.log('Fetched Recharge Transactions:', transactionResponse.data.data);
       const formattedData = transactionResponse.data.data.map(item => ({
         ...item,
         created_at: new Date(item.created_at),
@@ -50,7 +48,6 @@ const RechargeDashboard = () => {
         const dateAdded = new Date(item.created_at);
         return dateAdded >= startDate && dateAdded <= endDate;
       });
-      console.log('Date Range Filter Applied:', { startDate, endDate, filtered });
     } else {
       switch (filterType) {
         case 'Daily':
@@ -82,7 +79,6 @@ const RechargeDashboard = () => {
         default:
           break;
       }
-      console.log(`${filterType} Filter Applied:`, filtered);
     }
 
     setFilteredData(filtered);
@@ -158,7 +154,6 @@ const RechargeDashboard = () => {
       };
     });
 
-    console.log('Chart Data:', chartData);
     return chartData;
   };
 
@@ -175,27 +170,24 @@ const RechargeDashboard = () => {
     };
   });
 
-  // Export data as CSV with headings below the data
+  // Export data as CSV
   const exportData = () => {
-    // Summary Metrics Section
     const summaryDataRows = [
-      ['Total Recharges', totalRecharge, yesterdayTotalRecharge, comparisonRate.toFixed(2)],
-      ['Total Revenue', totalRecharge, yesterdayTotalRecharge, comparisonRate.toFixed(2)],
+      ['Total Recharges', totalRecharge.toFixed(2), yesterdayTotalRecharge.toFixed(2), comparisonRate.toFixed(2)],
+      ['Total Revenue', totalRecharge.toFixed(2), yesterdayTotalRecharge.toFixed(2), comparisonRate.toFixed(2)],
       ['Avg Ticket Size', totalAvgTicket.toFixed(2), totalAvgTicketTillYesterday.toFixed(2), comparisonRateAvg.toFixed(2)],
       ['Success Rate', successRateTillToday.toFixed(2), successRateTillYesterday.toFixed(2), comparisonRateSuccess],
     ];
 
     const summaryHeader = ['Metric', 'Value (₹)', 'Yesterday Value (₹)', 'Comparison (%)'];
 
-    // Top Operators Section
     const topOperatorsRows = topOperatorsData.map(operator => [
       operator.operator_name,
-      operator.total_amount,
+      operator.total_amount.toFixed(2),
     ]);
 
     const topOperatorsHeader = ['Operator Name', 'Total Amount (₹)'];
 
-    // Combine sections with headings below the data
     const csv = [
       ['Summary Metrics'],
       ...summaryDataRows,
@@ -205,7 +197,7 @@ const RechargeDashboard = () => {
       ...topOperatorsRows,
       topOperatorsHeader,
     ]
-      .map(row => row.join(','))
+      .map(row => row.map(cell => `"${cell}"`).join(','))
       .join('\n');
 
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -217,15 +209,33 @@ const RechargeDashboard = () => {
     window.URL.revokeObjectURL(url);
   };
 
+  // Custom Tooltip for charts
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
+          <p className="text-sm font-medium text-gray-800">{`Date: ${label}`}</p>
+          {payload.map((entry, index) => (
+            <p key={index} className="text-sm text-gray-600">
+              {`${entry.name}: ${entry.dataKey === 'successRate' ? `${entry.value.toFixed(2)}%` : `₹${entry.value.toLocaleString()}`}`}
+            </p>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Recharge Dashboard</h1>
-        <div className="flex items-center gap-3">
+    <div className="space-y-6 p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <h1 className="text-2xl font-bold text-gray-800">Recharge Dashboard</h1>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
           <select
-            className="p-2 border rounded"
+            className="p-2 border border-gray-200 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             value={filter}
             onChange={(e) => handleFilterChange(e.target.value)}
+            aria-label="Select filter period"
           >
             <option value="Daily">Daily</option>
             <option value="Weekly">Weekly</option>
@@ -233,28 +243,30 @@ const RechargeDashboard = () => {
           </select>
           <input
             type="date"
-            className="p-2 border rounded"
+            className="p-2 border border-gray-200 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            placeholder="dd-mm-yyyy"
+            aria-label="Start date"
           />
           <input
             type="date"
-            className="p-2 border rounded"
+            className="p-2 border border-gray-200 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
-            placeholder="dd-mm-yyyy"
+            aria-label="End date"
           />
           <button
-            className="px-4 py-2 bg-blue-600 text-white rounded"
+            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-indigo-300 transition-colors duration-200"
             onClick={handleDateFilter}
             disabled={!startDate || !endDate}
+            aria-label="Apply date filter"
           >
-            Apply Date Filter
+            <Filter className="h-4 w-4 inline mr-1" /> Apply
           </button>
           <button
-            className="px-4 py-2 bg-green-600 text-white rounded"
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors duration-200"
             onClick={exportData}
+            aria-label="Export data as CSV"
           >
             Export Data
           </button>
@@ -262,21 +274,21 @@ const RechargeDashboard = () => {
       </div>
 
       {loading ? (
-        <div className="text-center p-8">Loading...</div>
+        <div className="text-center p-8 text-gray-500">Loading...</div>
       ) : (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-200">
               <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-blue-100 text-blue-600 rounded-md">
+                <div className="p-3 bg-indigo-100 text-indigo-600 rounded-md">
                   <Phone className="h-6 w-6" />
                 </div>
                 <span
                   className={`text-sm font-medium px-2.5 py-0.5 rounded-full flex items-center ${
-                    String(comparisonRate).includes('-') ? 'text-white bg-red-500' : 'text-white bg-green-500'
+                    comparisonRate < 0 ? 'text-white bg-red-500' : 'text-white bg-green-500'
                   }`}
                 >
-                  {String(comparisonRate).includes('-') ? (
+                  {comparisonRate < 0 ? (
                     <ArrowDown className="h-3 w-3 mr-1" />
                   ) : (
                     <ArrowUp className="h-3 w-3 mr-1" />
@@ -285,40 +297,48 @@ const RechargeDashboard = () => {
                 </span>
               </div>
               <h3 className="text-lg font-medium text-gray-500">Total Recharges</h3>
-              <p className="text-3xl font-bold">₹{totalRecharge.toLocaleString()}</p>
+              <p className="text-2xl sm:text-3xl font-bold text-gray-800">₹{totalRecharge.toLocaleString()}</p>
               <p className="text-sm text-gray-500 mt-2">
-                vs. till yesterday (₹{yesterdayTotalRecharge.toLocaleString()} recharges)
+                vs. yesterday (₹{yesterdayTotalRecharge.toLocaleString()})
               </p>
             </div>
 
-            <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-200">
               <div className="flex items-center justify-between mb-4">
                 <div className="p-3 bg-green-100 text-green-600 rounded-md">
                   <DollarSign className="h-6 w-6" />
                 </div>
-                <span className="text-sm font-medium text-green-600 bg-green-100 px-2.5 py-0.5 rounded-full flex items-center">
-                  <ArrowUp className="h-3 w-3 mr-1" />
-                  5.2%
+                <span
+                  className={`text-sm font-medium px-2.5 py-0.5 rounded-full flex items-center ${
+                    comparisonRate < 0 ? 'text-white bg-red-500' : 'text-white bg-green-500'
+                  }`}
+                >
+                  {comparisonRate < 0 ? (
+                    <ArrowDown className="h-3 w-3 mr-1" />
+                  ) : (
+                    <ArrowUp className="h-3 w-3 mr-1" />
+                  )}
+                  {comparisonRate.toFixed(2)}%
                 </span>
               </div>
               <h3 className="text-lg font-medium text-gray-500">Total Revenue</h3>
-              <p className="text-3xl font-bold">₹{totalRecharge.toLocaleString()}</p>
+              <p className="text-2xl sm:text-3xl font-bold text-gray-800">₹{totalRecharge.toLocaleString()}</p>
               <p className="text-sm text-gray-500 mt-2">
-                vs. last period (₹{yesterdayTotalRecharge.toLocaleString()})
+                vs. yesterday (₹{yesterdayTotalRecharge.toLocaleString()})
               </p>
             </div>
 
-            <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-200">
               <div className="flex items-center justify-between mb-4">
                 <div className="p-3 bg-purple-100 text-purple-600 rounded-md">
                   <BarChart className="h-6 w-6" />
                 </div>
                 <span
                   className={`text-sm font-medium px-2.5 py-0.5 rounded-full flex items-center ${
-                    String(comparisonRateAvg).includes('-') ? 'text-red-600 bg-red-100' : 'text-green-600 bg-green-100'
+                    comparisonRateAvg < 0 ? 'text-white bg-red-500' : 'text-white bg-green-500'
                   }`}
                 >
-                  {String(comparisonRateAvg).includes('-') ? (
+                  {comparisonRateAvg < 0 ? (
                     <ArrowDown className="h-3 w-3 mr-1" />
                   ) : (
                     <ArrowUp className="h-3 w-3 mr-1" />
@@ -327,23 +347,23 @@ const RechargeDashboard = () => {
                 </span>
               </div>
               <h3 className="text-lg font-medium text-gray-500">Avg Ticket Size</h3>
-              <p className="text-3xl font-bold">₹{totalAvgTicket.toFixed(2)}</p>
+              <p className="text-2xl sm:text-3xl font-bold text-gray-800">₹{totalAvgTicket.toFixed(2)}</p>
               <p className="text-sm text-gray-500 mt-2">
-                vs. last period (₹{totalAvgTicketTillYesterday.toFixed(2)})
+                vs. yesterday (₹{totalAvgTicketTillYesterday.toFixed(2)})
               </p>
             </div>
 
-            <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-200">
               <div className="flex items-center justify-between mb-4">
                 <div className="p-3 bg-yellow-100 text-yellow-600 rounded-md">
                   <Zap className="h-6 w-6" />
                 </div>
                 <span
                   className={`text-sm font-medium px-2.5 py-0.5 rounded-full flex items-center ${
-                    String(comparisonRateSuccess).includes('-') ? 'text-red-600 bg-red-100' : 'text-green-600 bg-green-100'
+                    comparisonRateSuccess < 0 ? 'text-white bg-red-500' : 'text-white bg-green-500'
                   }`}
                 >
-                  {String(comparisonRateSuccess).includes('-') ? (
+                  {comparisonRateSuccess < 0 ? (
                     <ArrowDown className="h-3 w-3 mr-1" />
                   ) : (
                     <ArrowUp className="h-3 w-3 mr-1" />
@@ -352,75 +372,86 @@ const RechargeDashboard = () => {
                 </span>
               </div>
               <h3 className="text-lg font-medium text-gray-500">Success Rate</h3>
-              <p className="text-3xl font-bold">{successRateTillToday.toFixed(2)}%</p>
+              <p className="text-2xl sm:text-3xl font-bold text-gray-800">{successRateTillToday.toFixed(2)}%</p>
               <p className="text-sm text-gray-500 mt-2">
-                vs. last period ({successRateTillYesterday.toFixed(2)}%)
+                vs. yesterday ({successRateTillYesterday.toFixed(2)}%)
               </p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div>
-              <div className="mb-8 border rounded-lg p-4 bg-white shadow">
-                <h2 className="text-lg font-semibold mb-4">Recharge Amount Trend</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+            <div className="space-y-6">
+              <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 overflow-hidden">
+                <h2 className="text-lg font-semibold text-gray-800 mb-4">Recharge Amount Trend</h2>
                 <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={chartData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="date" />
-                      <YAxis />
-                      <Tooltip formatter={(value) => `₹${value.toFixed(2)}`} />
-                      <Legend />
+                    <LineChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <XAxis dataKey="date" stroke="#6b7280" tick={{ fontSize: 12 }} />
+                      <YAxis stroke="#6b7280" tick={{ fontSize: 12 }} tickFormatter={(value) => `₹${value.toLocaleString()}`} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend wrapperStyle={{ fontSize: 12 }} />
                       <Line
                         type="monotone"
                         dataKey="totalAmount"
-                        stroke="#0088FE"
-                        strokeWidth={2}
+                        stroke="#6366f1"
+                        strokeWidth={3}
+                        dot={{ r: 5, fill: '#6366f1', stroke: '#fff', strokeWidth: 2 }}
+                        activeDot={{ r: 8 }}
+                        animationDuration={800}
                         name="Total Recharge Amount"
-                        dot={{ strokeWidth: 2, r: 4 }}
                       />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
               </div>
 
-              <div className="mb-8 border rounded-lg p-4 bg-white shadow">
-                <h2 className="text-lg font-semibold mb-4">Success Rate by Day</h2>
+              <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 overflow-hidden">
+                <h2 className="text-lg font-semibold text-gray-800 mb-4">Success Rate by Day</h2>
                 <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={chartData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="date" />
-                      <YAxis domain={[0, 100]} />
-                      <Tooltip formatter={(value) => `${value.toFixed(2)}%`} />
-                      <Legend />
+                    <BarChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <XAxis dataKey="date" stroke="#6b7280" tick={{ fontSize: 12 }} />
+                      <YAxis stroke="#6b7280" tick={{ fontSize: 12 }} domain={[0, 100]} tickFormatter={(value) => `${value}%`} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend wrapperStyle={{ fontSize: 12 }} />
                       <Bar
                         dataKey="successRate"
-                        fill="#00C49F"
+                        fill="#10b981"
+                        radius={[6, 6, 0, 0]}
+                        barSize={30}
+                        animationDuration={800}
                         name="Success Rate (%)"
-                      />
+                      >
+                        {chartData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fillOpacity={0.8 + index * 0.02} />
+                        ))}
+                      </Bar>
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
               </div>
 
-              <div className="border rounded-lg p-4 bg-white shadow">
-                <h2 className="text-lg font-semibold mb-4">Average Ticket Size</h2>
+              <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 overflow-hidden">
+                <h2 className="text-lg font-semibold text-gray-800 mb-4">Average Ticket Size</h2>
                 <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={chartData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="date" />
-                      <YAxis />
-                      <Tooltip formatter={(value) => `₹${value.toFixed(2)}`} />
-                      <Legend />
+                    <LineChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <XAxis dataKey="date" stroke="#6b7280" tick={{ fontSize: 12 }} />
+                      <YAxis stroke="#6b7280" tick={{ fontSize: 12 }} tickFormatter={(value) => `₹${value.toLocaleString()}`} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend wrapperStyle={{ fontSize: 12 }} />
                       <Line
                         type="monotone"
                         dataKey="avgTicket"
-                        stroke="#FF8042"
-                        strokeWidth={2}
+                        stroke="#f59e0b"
+                        strokeWidth={3}
+                        dot={{ r: 5, fill: '#f59e0b', stroke: '#fff', strokeWidth: 2 }}
+                        activeDot={{ r: 8 }}
+                        animationDuration={800}
                         name="Average Ticket Size"
-                        dot={{ strokeWidth: 2, r: 4 }}
                       />
                     </LineChart>
                   </ResponsiveContainer>
@@ -428,16 +459,19 @@ const RechargeDashboard = () => {
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-medium">Top Operators</h3>
-                <select className="border border-gray-300 rounded-md text-sm p-2">
+                <h3 className="text-lg font-medium text-gray-800">Top Operators</h3>
+                <select
+                  className="border border-gray-200 rounded-lg bg-white text-sm p-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  aria-label="Sort top operators"
+                >
                   <option value="volume">By Volume</option>
                   <option value="revenue" selected>By Revenue</option>
                 </select>
               </div>
               <div className="space-y-4">
-                {operators &&
+                {operators && operators.length > 0 ? (
                   operators.map((operator) => {
                     const totalAmount = filteredData
                       .filter((transaction) => String(transaction.operator) === String(operator.operator_id))
@@ -446,27 +480,33 @@ const RechargeDashboard = () => {
                     return (
                       <div key={operator.id || operator.operator_id} className="flex items-center justify-between">
                         <div className="flex items-center">
-                          <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600 mr-3">
+                          <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 mr-3">
                             <span className="font-medium">
                               {operator.operator_name.charAt(0).toUpperCase()}
                             </span>
                           </div>
                           <div>
-                            <p className="font-medium">{operator.operator_name}</p>
+                            <p className="font-medium text-gray-800">{operator.operator_name}</p>
                           </div>
                         </div>
-                        <p className="font-bold">₹{totalAmount.toLocaleString()}</p>
+                        <p className="font-bold text-gray-800">₹{totalAmount.toLocaleString()}</p>
                       </div>
                     );
-                  })}
+                  })
+                ) : (
+                  <p className="text-sm text-gray-500">No operators available.</p>
+                )}
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-medium">Recent Transactions</h3>
-              <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+              <h3 className="text-lg font-medium text-gray-800">Recent Transactions</h3>
+              <button
+                className="text-indigo-600 hover:text-indigo-800 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                aria-label="View all transactions"
+              >
                 View All
               </button>
             </div>
@@ -475,22 +515,22 @@ const RechargeDashboard = () => {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Reference ID
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Phone Number
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Operator
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Amount
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Date & Time
                     </th>
                   </tr>
@@ -500,20 +540,20 @@ const RechargeDashboard = () => {
                     [...filteredData]
                       .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
                       .map((transaction) => (
-                        <tr key={transaction.referenceid}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <tr key={transaction.referenceid} className="hover:bg-gray-50 transition-colors duration-200">
+                          <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {transaction.referenceid}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {transaction.canumber}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {transaction.operator}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             ₹{parseFloat(transaction.amount).toFixed(2)}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                             <span
                               className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                                 transaction.status === 'success'
@@ -524,14 +564,14 @@ const RechargeDashboard = () => {
                               {transaction.status}
                             </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {new Date(transaction.created_at).toLocaleString()}
                           </td>
                         </tr>
                       ))
                   ) : (
                     <tr>
-                      <td colSpan="6" className="px-6 py-4 text-center text-sm text-gray-500">
+                      <td colSpan="6" className="px-4 sm:px-6 py-4 text-center text-sm text-gray-500">
                         No transactions found for this period.
                       </td>
                     </tr>

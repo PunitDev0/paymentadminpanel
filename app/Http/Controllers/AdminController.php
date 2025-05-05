@@ -18,7 +18,7 @@ class adminController extends Controller
 {
     public function dashboard(){
     
-        return Inertia::render('Admin/dashboard');
+        return Inertia::render('Admin/Dashboard/dashboard');
 
     }
 
