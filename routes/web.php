@@ -140,12 +140,18 @@ Route::middleware('auth:web')->prefix('admin')->group(function () {
     // IP Whitelist Routes
     Route::get('/whitelisted-ips', [WhitelistingIpsController::class, 'index']);
     Route::patch('/whitelisted-ips/{whitelistingIp}/toggle-status', [WhitelistingIpsController::class, 'toggleStatus']);
-});
 
-// Authentication Routes
+    Route::get('/onboard-requests', [OnBoardRequestController::class, 'index']);
+Route::post('/onboard-requests/{id}/status', [OnBoardRequestController::class, 'updateStatus']);
+
 
 Route::get('/commissions', [CommissionController::class, 'getCommissions'])->name('commissions.get');
 Route::post('/commissions/{type}', [CommissionController::class, 'updateCommissions'])->name('commissions.update');
 
-Route::get('/onboard-requests', [OnBoardRequestController::class, 'index']);
-Route::post('/onboard-requests/{id}/status', [OnBoardRequestController::class, 'updateStatus']);
+});
+
+// Authentication Routes
+
+
+
+

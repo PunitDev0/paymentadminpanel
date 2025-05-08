@@ -398,7 +398,7 @@ export const deleteMember = async (id, userType) => {
 
 export const getCommissions = async () => {
     try {
-        const response = await axios.get('/commissions');
+        const response = await axios.get(`${BASE_URL}/admin/commissions`);
         return response.data;
     } catch (error) {
         throw new Error('Failed to fetch commissions');
@@ -409,7 +409,7 @@ export const updateCommissions = async (changedData) => {
     const promises = Object.keys(changedData).map(async (commissionType) => {
         const type = commissionType.replace('_commissions', '');
         try {
-            const response = await axios.post(`/commissions/${type}`, changedData[commissionType]);
+            const response = await axios.post(`${BASE_URL}/admin/commissions/${type}`, changedData[commissionType]);
             return response.data;
         } catch (error) {
             throw new Error(`Failed to update ${commissionType}`);
@@ -528,7 +528,7 @@ export const balanceApi = {
 
   export const getOnBoardRequests = async () => {
     try {
-        const response = await axios.get(`${BASE_URL}/onboard-requests`);
+        const response = await axios.get(`${BASE_URL}/admin/onboard-requests`);
         return response.data;
     } catch (error) {
         throw new Error(error.response?.data?.error || 'Failed to fetch onboard requests');
