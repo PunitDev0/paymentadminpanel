@@ -395,22 +395,28 @@ export const deleteMember = async (id, userType) => {
     }
 };
 
-export const getCommissions = async (userId) => {
+
+export const getCommissions = async () => {
     try {
-        const response = await axios.get(`${BASE_URL}/admin/commissions/${userId}`);
+        const response = await axios.get('/commissions');
         return response.data;
     } catch (error) {
-        throw new Error(error.response?.data?.error || 'Failed to fetch commissions');
+        throw new Error('Failed to fetch commissions');
     }
 };
 
-export const updateCommissions = async (userId, commissions) => {
-    try {
-        const response = await axios.post(`${BASE_URL}/admin/commissions/${userId}`, commissions);
-        return response.data;
-    } catch (error) {
-        throw new Error(error.response?.data?.error || 'Failed to update commissions');
-    }
+export const updateCommissions = async (changedData) => {
+    const promises = Object.keys(changedData).map(async (commissionType) => {
+        const type = commissionType.replace('_commissions', '');
+        try {
+            const response = await axios.post(`/commissions/${type}`, changedData[commissionType]);
+            return response.data;
+        } catch (error) {
+            throw new Error(`Failed to update ${commissionType}`);
+        }
+    });
+
+    return Promise.all(promises);
 };
 
 //bankdetails
@@ -517,3 +523,23 @@ export const balanceApi = {
       throw error;
     }
   };
+
+
+
+  export const getOnBoardRequests = async () => {
+    try {
+        const response = await axios.get(`${BASE_URL}/onboard-requests`);
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.error || 'Failed to fetch onboard requests');
+    }
+};
+
+export const updateOnBoardRequestStatus = async (id, status) => {
+    try {
+        const response = await axios.post(`${BASE_URL}/onboard-requests/${id}/status`, { status });
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.error || 'Failed to update status');
+    }
+};

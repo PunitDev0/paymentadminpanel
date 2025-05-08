@@ -13,6 +13,9 @@ use App\Http\Controllers\CMSController;
 use App\Http\Controllers\IpWhitelistController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminUtilityOperatorController;
+use App\Http\Controllers\CommissionsController;
+use App\Http\Controllers\OnBoardRequestController;
+use App\Http\Controllers\WhitelistingIpsController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -51,9 +54,10 @@ Route::middleware('auth:web')->prefix('admin')->group(function () {
     Route::post('/bank/deactivate', [BankController::class, 'deactivateBank'])->name('admin.bank.deactivate');
 
     // Commission Routes
-    Route::get('/commissions/{userId}', [CommissionController::class, 'getCommissions'])->name('admin.commissions.get');
-    Route::post('/commissions/{userId}', [CommissionController::class, 'updateCommissions'])->name('admin.commissions.update');
-    Route::get('/commission-rate/{id}', [CommissionController::class, 'getCommissionRate'])->name('admin.commission.rate');
+    Route::get('/commission', [CommissionController::class, 'commission'])->name('admin.commissions.get');
+    // Route::get('/commissions/{userId}', [CommissionController::class, 'getCommissions'])->name('admin.commissions.get');
+    // Route::post('/commissions/{userId}', [CommissionController::class, 'updateCommissions'])->name('admin.commissions.update');
+    // Route::get('/commission-rate/{id}', [CommissionController::class, 'getCommissionRate'])->name('admin.commission.rate');
 
     // Recharge Routes
     Route::get('/recharge/dashboard', [AdminController::class, 'recharge'])->name('admin.recharge');
@@ -102,7 +106,7 @@ Route::middleware('auth:web')->prefix('admin')->group(function () {
 
     // DMT Bank Routes
     Route::get('/dmt-bank-2', [DMTbankController::class, 'dmt2dashboard'])->name('admin.dmt2.dashboard');
-    Route::post('/dmt/bank-2/fetch', [DMTbankController::class, 'fetchdmt2'])->name('admin.dmt2.fetch');
+    Route::post('/dmt-bank-2/fetchdata', [DMTbankController::class, 'fetchdmt2'])->name('admin.dmt2.fetch');
 
     // LIC Routes
     Route::get('/lic', [LicController::class, 'licdashboard'])->name('admin.lic.dashboard');
@@ -129,15 +133,23 @@ Route::middleware('auth:web')->prefix('admin')->group(function () {
     Route::post('/payment-requests/{id}/approve', [BankController::class, 'approvePaymentRequest'])->name('admin.payment.approve');
     Route::post('/payment-requests/{id}/disapprove', [BankController::class, 'disapprovePaymentRequest'])->name('admin.payment.disapprove');
 
-    // IP Whitelist Routes
-    Route::get('/ip-whitelist', [IpWhitelistController::class, 'index'])->name('admin.ip-whitelist.index');
-    Route::post('/ip-whitelist/{id}/status', [IpWhitelistController::class, 'updateStatus'])->name('admin.ip-whitelist.status');
-    Route::put('/ip-whitelist/{id}', [IpWhitelistController::class, 'update'])->name('admin.ip-whitelist.update');
-    Route::delete('/ip-whitelist/{id}', [IpWhitelistController::class, 'destroy'])->name('admin.ip-whitelist.destroy');
+
+
 
     // Utility Operators Routes
     Route::get('/utility-operators', [AdminUtilityOperatorController::class, 'index'])->name('admin.utility-operators.index');
     Route::post('/utility-operators/{id}/toggle-status', [AdminUtilityOperatorController::class, 'toggleStatus'])->name('admin.utility-operators.toggle-status');
+
+
+    // IP Whitelist Routes
+    Route::get('/whitelisted-ips', [WhitelistingIpsController::class, 'index']);
+    Route::patch('/whitelisted-ips/{whitelistingIp}/toggle-status', [WhitelistingIpsController::class, 'toggleStatus']);
 });
 
 // Authentication Routes
+
+Route::get('/commissions', [CommissionController::class, 'getCommissions'])->name('commissions.get');
+Route::post('/commissions/{type}', [CommissionController::class, 'updateCommissions'])->name('commissions.update');
+
+Route::get('/onboard-requests', [OnBoardRequestController::class, 'index']);
+Route::post('/onboard-requests/{id}/status', [OnBoardRequestController::class, 'updateStatus']);

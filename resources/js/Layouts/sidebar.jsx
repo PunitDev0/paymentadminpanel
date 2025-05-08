@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
-import { ChevronDown, ChevronRight, LayoutDashboard, ChartPie, Code, Building, Drill, Cog, CalendarRange, Users, Banknote } from 'lucide-react';
+import { ChevronDown, ChevronRight, LayoutDashboard, ChartPie, Code, Building, Drill, Cog, CalendarRange, Users, Banknote, Import, Network } from 'lucide-react';
 
 const BASE_URL = import.meta.env.VITE_APP_SERVER === "PRODUCTION"
   ? "https://banking.nikatby.com/admin/public"
@@ -108,6 +108,13 @@ export const sidebarRoutes = [
     title: "Bank Details",
     path: `${BASE_URL}/admin/bank`,
     icon: <Banknote className="h-5 w-5" />,
+    permissions: ["admin"],
+  },
+  {
+    id: "whitelistingip",
+    title: "Whitelisting Ips",
+    path: `${BASE_URL}/admin/whitelisted-ips`,
+    icon: <Network className="h-5 w-5" />,
     permissions: ["admin"],
   },
 ];

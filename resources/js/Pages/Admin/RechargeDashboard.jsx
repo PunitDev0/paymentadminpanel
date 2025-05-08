@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ResponsiveContainer, LineChart, BarChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { ResponsiveContainer, LineChart, BarChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Cell } from 'recharts';
 import { Calendar, DollarSign, Phone, Zap, ArrowDown, ArrowUp, Filter } from 'lucide-react';
 import { OperatorList, Recharge_Transaction } from '@/lib/apis';
 
@@ -7,7 +7,7 @@ const RechargeDashboard = () => {
   const [operators, setOperators] = useState([]);
   const [rechargeTransaction, setRechargeTransaction] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
-  const [filter, setFilter] = useState('Daily');
+  const [filter, setFilter] = useState('All'); // Changed default to 'All'
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [loading, setLoading] = useState(false);
@@ -26,7 +26,9 @@ const RechargeDashboard = () => {
       const formattedData = transactionResponse.data.data.map(item => ({
         ...item,
         created_at: new Date(item.created_at),
+        operator_name: operatorResponse.data.data.find(op => String(op.operator_id) === String(item.operator))?.operator_name || item.operator
       }));
+      
       setRechargeTransaction(formattedData);
       applyFilter(formattedData, filter, startDate, endDate);
     } catch (error) {
@@ -48,7 +50,7 @@ const RechargeDashboard = () => {
         const dateAdded = new Date(item.created_at);
         return dateAdded >= startDate && dateAdded <= endDate;
       });
-    } else {
+    } else if (filterType !== 'All') {
       switch (filterType) {
         case 'Daily':
           filtered = filtered.filter(item => {
@@ -237,6 +239,7 @@ const RechargeDashboard = () => {
             onChange={(e) => handleFilterChange(e.target.value)}
             aria-label="Select filter period"
           >
+            <option value="All">All</option>
             <option value="Daily">Daily</option>
             <option value="Weekly">Weekly</option>
             <option value="Monthly">Monthly</option>
@@ -396,7 +399,7 @@ const RechargeDashboard = () => {
                         dataKey="totalAmount"
                         stroke="#6366f1"
                         strokeWidth={3}
-                        dot={{ r: 5, fill: '#6366f1', stroke: '#fff', strokeWidth: 2 }}
+                        dot={{ r: 5, fill: '#6366f1', stroke: '#ff', strokeWidth: 2 }}
                         activeDot={{ r: 8 }}
                         animationDuration={800}
                         name="Total Recharge Amount"
@@ -462,6 +465,7 @@ const RechargeDashboard = () => {
             <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg font-medium text-gray-800">Top Operators</h3>
+                atri
                 <select
                   className="border border-gray-200 rounded-lg bg-white text-sm p-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   aria-label="Sort top operators"
@@ -548,7 +552,7 @@ const RechargeDashboard = () => {
                             {transaction.canumber}
                           </td>
                           <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {transaction.operator}
+                            {transaction.operator_name}
                           </td>
                           <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             ₹{parseFloat(transaction.amount).toFixed(2)}

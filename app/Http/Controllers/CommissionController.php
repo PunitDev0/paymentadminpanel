@@ -2,145 +2,231 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\commissions\RechargeCommission;
+use App\Models\commissions\ElectricityCommission;
+use App\Models\commissions\DigitalvoucherCommission;
+use App\Models\commissions\DatacardCommission;
+use App\Models\commissions\GasfastagCommission;
+use App\Models\commissions\CMSCommission;
+use App\Models\commissions\ChallanCommission;
+use App\Models\commissions\CableCommission;
+use App\Models\commissions\BroadbandCommission;
+use App\Models\commissions\BankCommission;
 use Illuminate\Http\Request;
-use App\Models\CMSCommission;
-use App\Models\BankCommission;
-use App\Models\GasFastagCommission;
-use App\Models\RechargeCommission;
-use App\Models\UtilityCommission;
-use App\Models\RegisteredUser;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
+use Inertia\Inertia;
 
 class CommissionController extends Controller
 {
-    public function getCommissions($userId)
+    /**
+     * Fetch all commissions.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+
+     public  function  commission (){
+        return Inertia::render('Admin/commission');
+    }
+    public function getCommissions()
     {
         try {
-            $user = RegisteredUser::findOrFail($userId);
+            $commissions = [
+                'recharge_commissions' => RechargeCommission::all()->map(function ($item) {
+                    return [
+                        'id' => $item->id,
+                        'operator_name' => $item->operator_name,
+                        'operator_id' => $item->operator_id,
+                        'category' => $item->category,
+                        'commission' => $item->server_1_commission,
+                        'our_commission' => $item->our_commission,
+                    ];
+                })->toArray(),
+                'electricity_commissions' => ElectricityCommission::all()->map(function ($item) {
+                    return [
+                        'id' => $item->id,
+                        'operator_name' => $item->operator_name,
+                        'operator_id' => $item->operator_id,
+                        'type' => $item->type,
+                        'commission' => $item->commission,
+                        'our_commission' => $item->our_commission,
+                    ];
+                })->toArray(),
+                'digital_voucher_commissions' => DigitalvoucherCommission::all()->map(function ($item) {
+                    return [
+                        'id' => $item->id,
+                        'operator_name' => $item->operator_name,
+                        'operator_id' => $item->operator_id,
+                        'type' => $item->type,
+                        'commission' => $item->commission,
+                        'our_commission' => $item->our_commission,
+                    ];
+                })->toArray(),
+                'datacard_commissions' => DatacardCommission::all()->map(function ($item) {
+                    return [
+                        'id' => $item->id,
+                        'operator_name' => $item->operator_name,
+                        'operator_id' => $item->operator_id,
+                        'type' => $item->type,
+                        'commission' => $item->commission,
+                        'our_commission' => $item->our_commission,
+                    ];
+                })->toArray(),
+                'gas_fastag_commissions' => GasfastagCommission::all()->map(function ($item) {
+                    return [
+                        'id' => $item->id,
+                        'operator_name' => $item->operator_name,
+                        'category' => $item->category,
+                        'type' => $item->type,
+                        'commission' => $item->commission,
+                        'our_commission' => $item->our_commission,
+                    ];
+                })->toArray(),
+                'cms_commissions' => CMSCommission::all()->map(function ($item) {
+                    return [
+                        'id' => $item->id,
+                        'operator_name' => $item->operator_name,
+                        'operator_id' => $item->operator_id,
+                        'type' => $item->type,
+                        'commission' => $item->commission,
+                        'our_commission' => $item->our_commission,
+                    ];
+                })->toArray(),
+                'challan_commissions' => ChallanCommission::all()->map(function ($item) {
+                    return [
+                        'id' => $item->id,
+                        'operator_name' => $item->operator_name,
+                        'operator_id' => $item->operator_id,
+                        'type' => $item->type,
+                        'commission' => $item->commission,
+                        'our_commission' => $item->our_commission,
+                    ];
+                })->toArray(),
+                'cable_commissions' => CableCommission::all()->map(function ($item) {
+                    return [
+                        'id' => $item->id,
+                        'operator_name' => $item->operator_name,
+                        'operator_id' => $item->operator_id,
+                        'type' => $item->type,
+                        'commission' => $item->commission,
+                        'our_commission' => $item->our_commission,
+                    ];
+                })->toArray(),
+                'broadband_commissions' => BroadbandCommission::all()->map(function ($item) {
+                    return [
+                        'id' => $item->id,
+                        'operator_name' => $item->operator_name,
+                        'operator_id' => $item->operator_id,
+                        'category' => $item->category,
+                        'type' => $item->type,
+                        'commission' => $item->commission,
+                        'our_commission' => $item->our_commission,
+                    ];
+                })->toArray(),
+                'bank_commissions' => BankCommission::all()->map(function ($item) {
+                    return [
+                        'id' => $item->id,
+                        'transaction_amount' => $item->transaction_amount,
+                        'category' => $item->category,
+                        'commission' => $item->commission,
+                        'our_commission' => $item->our_commission,
+                    ];
+                })->toArray(),
+            ];
 
-            $cmsCommissions = CMSCommission::where('user_id', $userId)->get();
-            $bankCommissions = BankCommission::where('user_id', $userId)->get();
-            $gasFastagCommissions = GasFastagCommission::where('user_id', $userId)->get();
-            $rechargeCommissions = RechargeCommission::where('user_id', $userId)->get();
-            $utilityCommissions = UtilityCommission::where('user_id', $userId)->get();
-
-            return response()->json([
-                'cms_commissions' => $cmsCommissions,
-                'bank_commissions' => $bankCommissions,
-                'gas_fastag_commissions' => $gasFastagCommissions,
-                'recharge_commissions' => $rechargeCommissions,
-                'utility_commissions' => $utilityCommissions,
-            ], 200);
+            return response()->json($commissions, 200);
         } catch (\Exception $e) {
-            Log::error("Failed to fetch commissions for user ID: {$userId}. Error: " . $e->getMessage());
             return response()->json(['error' => 'Failed to fetch commissions: ' . $e->getMessage()], 500);
         }
     }
 
-    public function updateCommissions(Request $request, $userId)
+    /**
+     * Update our_commission for a specific commission type.
+     *
+     * @param Request $request
+     * @param string $type
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function updateCommissions(Request $request, $type)
     {
+        $validator = Validator::make($request->all(), [
+            '*.id' => 'required|integer',
+            '*.our_commission' => 'required|numeric|min:0',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 422);
+        }
+
         try {
-            $user = RegisteredUser::findOrFail($userId);
+            $data = $request->all();
 
-            $validated = $request->validate([
-                'cms_commissions' => 'nullable|array',
-                'cms_commissions.*.id' => 'required|exists:cms_commission,id',
-                'cms_commissions.*.Commission' => 'nullable|numeric|min:0',
-
-                'bank_commissions' => 'nullable|array',
-                'bank_commissions.*.id' => 'required|exists:bank_commission,id',
-                'bank_commissions.*.commission' => 'nullable|numeric|min:0',
-
-                'gas_fastag_commissions' => 'nullable|array',
-                'gas_fastag_commissions.*.id' => 'required|exists:gas_fastag_commission,id',
-                'gas_fastag_commissions.*.commission' => 'nullable|numeric|min:0',
-
-                'recharge_commissions' => 'nullable|array',
-                'recharge_commissions.*.id' => 'required|exists:recharge_commission,id',
-                'recharge_commissions.*.server_1_commission' => 'nullable|numeric|min:0',
-                'recharge_commissions.*.server_2_commission' => 'nullable|numeric|min:0',
-
-                'utility_commissions' => 'nullable|array',
-                'utility_commissions.*.id' => 'required|exists:utility_commission,id',
-                'utility_commissions.*.commission' => 'nullable|numeric|min:0',
-            ]);
-
-            if (!empty($validated['cms_commissions'])) {
-                foreach ($validated['cms_commissions'] as $cmsCommission) {
-                    $updateData = [];
-                    if (isset($cmsCommission['Commission'])) {
-                        $updateData['Commission'] = $cmsCommission['Commission'];
+            switch ($type) {
+                case 'recharge':
+                    foreach ($data as $commission) {
+                        RechargeCommission::where('id', $commission['id'])->update(['our_commission' => $commission['our_commission']]);
                     }
-                    if (!empty($updateData)) {
-                        CMSCommission::where('id', $cmsCommission['id'])
-                            ->where('user_id', $userId)
-                            ->update($updateData);
+                    break;
+
+                case 'electricity':
+                    foreach ($data as $commission) {
+                        ElectricityCommission::where('id', $commission['id'])->update(['our_commission' => $commission['our_commission']]);
                     }
-                }
+                    break;
+
+                case 'digital_voucher':
+                    foreach ($data as $commission) {
+                        DigitalvoucherCommission::where('id', $commission['id'])->update(['our_commission' => $commission['our_commission']]);
+                    }
+                    break;
+
+                case 'datacard':
+                    foreach ($data as $commission) {
+                        DatacardCommission::where('id', $commission['id'])->update(['our_commission' => $commission['our_commission']]);
+                    }
+                    break;
+
+                case 'gas_fastag':
+                    foreach ($data as $commission) {
+                        GasfastagCommission::where('id', $commission['id'])->update(['our_commission' => $commission['our_commission']]);
+                    }
+                    break;
+
+                case 'cms':
+                    foreach ($data as $commission) {
+                        CMSCommission::where('id', $commission['id'])->update(['our_commission' => $commission['our_commission']]);
+                    }
+                    break;
+
+                case 'challan':
+                    foreach ($data as $commission) {
+                        ChallanCommission::where('id', $commission['id'])->update(['our_commission' => $commission['our_commission']]);
+                    }
+                    break;
+
+                case 'cable':
+                    foreach ($data as $commission) {
+                        CableCommission::where('id', $commission['id'])->update(['our_commission' => $commission['our_commission']]);
+                    }
+                    break;
+
+                case 'broadband':
+                    foreach ($data as $commission) {
+                        BroadbandCommission::where('id', $commission['id'])->update(['our_commission' => $commission['our_commission']]);
+                    }
+                    break;
+
+                case 'bank':
+                    foreach ($data as $commission) {
+                        BankCommission::where('id', $commission['id'])->update(['our_commission' => $commission['our_commission']]);
+                    }
+                    break;
+
+                default:
+                    return response()->json(['error' => 'Invalid commission type'], 400);
             }
 
-            if (!empty($validated['bank_commissions'])) {
-                foreach ($validated['bank_commissions'] as $bankCommission) {
-                    $updateData = [];
-                    if (isset($bankCommission['commission'])) {
-                        $updateData['commission'] = $bankCommission['commission'];
-                    }
-                    if (!empty($updateData)) {
-                        BankCommission::where('id', $bankCommission['id'])
-                            ->where('user_id', $userId)
-                            ->update($updateData);
-                    }
-                }
-            }
-
-            if (!empty($validated['gas_fastag_commissions'])) {
-                foreach ($validated['gas_fastag_commissions'] as $gasFastagCommission) {
-                    $updateData = [];
-                    if (isset($gasFastagCommission['commission'])) {
-                        $updateData['commission'] = $gasFastagCommission['commission'];
-                    }
-                    if (!empty($updateData)) {
-                        GasFastagCommission::where('id', $gasFastagCommission['id'])
-                            ->where('user_id', $userId)
-                            ->update($updateData);
-                    }
-                }
-            }
-
-            if (!empty($validated['recharge_commissions'])) {
-                foreach ($validated['recharge_commissions'] as $rechargeCommission) {
-                    $updateData = [];
-                    if (isset($rechargeCommission['server_1_commission'])) {
-                        $updateData['server_1_commission'] = $rechargeCommission['server_1_commission'];
-                    }
-                    if (isset($rechargeCommission['server_2_commission'])) {
-                        $updateData['server_2_commission'] = $rechargeCommission['server_2_commission'];
-                    }
-                    if (!empty($updateData)) {
-                        RechargeCommission::where('id', $rechargeCommission['id'])
-                            ->where('user_id', $userId)
-                            ->update($updateData);
-                    }
-                }
-            }
-
-            if (!empty($validated['utility_commissions'])) {
-                foreach ($validated['utility_commissions'] as $utilityCommission) {
-                    $updateData = [];
-                    if (isset($utilityCommission['commission'])) {
-                        $updateData['commission'] = $utilityCommission['commission'];
-                    }
-                    if (!empty($updateData)) {
-                        UtilityCommission::where('id', $utilityCommission['id'])
-                            ->where('user_id', $userId)
-                            ->update($updateData);
-                    }
-                }
-            }
-
-            return response()->json(['message' => 'Commissions updated successfully'], 200);
+            return response()->json(['message' => 'Our commissions updated successfully'], 200);
         } catch (\Exception $e) {
-            Log::error("Failed to update commissions for user ID: {$userId}. Error: " . $e->getMessage());
             return response()->json(['error' => 'Failed to update commissions: ' . $e->getMessage()], 500);
         }
     }

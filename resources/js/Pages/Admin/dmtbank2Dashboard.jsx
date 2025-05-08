@@ -19,7 +19,7 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, T
 const DMTBank2Dashboard = () => {
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
-  const [filter, setFilter] = useState('Daily');
+  const [filter, setFilter] = useState('All'); // Default to 'All'
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [loading, setLoading] = useState(false);
@@ -59,7 +59,7 @@ const DMTBank2Dashboard = () => {
         return dateAdded >= startDate && dateAdded <= endDate;
       });
       console.log('Date Range Filter Applied:', { startDate, endDate, filtered });
-    } else {
+    } else if (filterType !== 'All') {
       switch (filterType) {
         case 'Daily':
           filtered = filtered.filter(item => {
@@ -299,7 +299,8 @@ const DMTBank2Dashboard = () => {
         ticks: {
           color: '#6b7280',
           font: { size: 12 },
-          callback: (value) => {
+          callback: (value, index, values, context) => {
+            if (!context) return value;
             const chart = context.chart;
             if (!chart) return value;
             return chart.data.datasets[0].label.includes('Success Rate')
@@ -378,6 +379,7 @@ const DMTBank2Dashboard = () => {
               className="p-2 border border-gray-200 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               aria-label="Select time filter"
             >
+              <option value="All">All</option>
               <option value="Daily">Daily</option>
               <option value="Weekly">Weekly</option>
               <option value="Monthly">Monthly</option>
