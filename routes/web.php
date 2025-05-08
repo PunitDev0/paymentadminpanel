@@ -29,13 +29,9 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/user', [AuthController::class, 'getAuthenticatedUser'])->name('user');
 
 // Admin-Prefixed Authenticated Routes (Require authentication)
+// Dashboard
 Route::middleware('auth:web')->prefix('admin')->group(function () {
-    // Dashboard
-    Route::get('/', [AdminController::class, 'dashboard'])->name('admin.dashboard');
-    Route::get('/dashboard', function () {
-        return Inertia::render('Dashboard');
-    })->name('dashboard');
-
+    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
     // Profile Routes
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
