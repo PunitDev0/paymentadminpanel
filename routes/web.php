@@ -30,8 +30,8 @@ Route::get('/user', [AuthController::class, 'getAuthenticatedUser'])->name('user
 
 // Admin-Prefixed Authenticated Routes (Require authentication)
 // Dashboard
+Route::get('/', [AdminController::class, 'dashboard'])->name('admin.dashboard')->middleware('auth:web');
 Route::middleware('auth:web')->prefix('admin')->group(function () {
-    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
     // Profile Routes
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

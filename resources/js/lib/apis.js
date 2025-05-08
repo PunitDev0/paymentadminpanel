@@ -495,7 +495,7 @@ export const balanceApi = {
   // New functions for payment requests
   export const getAllPaymentRequests = async () => {
     try {
-      const response = await axios.get('/payment-requests'); // No baseURL
+      const response = await axios.get('/admin/payment-requests'); // No baseURL
       console.log(response.data);
       return response.data;
     } catch (error) {
@@ -537,8 +537,16 @@ export const balanceApi = {
 
 export const updateOnBoardRequestStatus = async (id, status) => {
     try {
-        const response = await axios.post(`${BASE_URL}/onboard-requests/${id}/status`, { status });
+        const response = await axios.post(`${BASE_URL}/admin/onboard-requests/${id}/status`, { status });
         return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.error || 'Failed to update status');
+    }
+};
+export const ipstatustoggle = async (id) => {
+    try {
+        const response = await axios.patch(`${BASE_URL}/admin/whitelisted-ips/${id}/toggle-status`);
+        return { data: { status: response.data.status } }; // Wrap the status in a data object
     } catch (error) {
         throw new Error(error.response?.data?.error || 'Failed to update status');
     }

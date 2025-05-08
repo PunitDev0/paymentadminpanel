@@ -3,14 +3,15 @@ import axios from 'axios';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ipstatustoggle } from '@/lib/apis';
 
-const WhitelistedIpsManager = ({whitelistedIps}) => {
+const WhitelistedIpsManager = ({ whitelistedIps }) => {
     const [ips, setIps] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         fetchIps();
-    }, []);
+    }, []); // Removed setIps from dependency array
 
     const fetchIps = async () => {
         try {
@@ -18,15 +19,15 @@ const WhitelistedIpsManager = ({whitelistedIps}) => {
             setLoading(false);
         } catch (error) {
             console.error('Error fetching IPs:', error);
-            setLoading(false)
+            setLoading(false);
         }
     };
 
     const toggleStatus = async (id) => {
         try {
-            const response = await axios.patch(`/admin/whitelisted-ips/${id}/toggle-status`);
+            const response = await ipstatustoggle(id);
             setIps(ips.map(ip => 
-                ip.id === id ? { ...ip, status: response.data.status } : ip
+                ip.id === id ? { ...ip, status: response?.data?.status } : ip
             ));
         } catch (error) {
             console.error('Error toggling status:', error);
