@@ -18,7 +18,7 @@ const WhitelistedIpsManager = ({whitelistedIps}) => {
             setLoading(false);
         } catch (error) {
             console.error('Error fetching IPs:', error);
-            setLoading(false);
+            setLoading(false)
         }
     };
 
