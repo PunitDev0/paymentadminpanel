@@ -20,18 +20,19 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }) => {
     const fetchBBSBalance = async () => {
       try {
         setIsLoadingWallet(true);
-        const result = axios.get(`${BASE_URL}/admin/balance_check`)
-        console.log(result);
+        const result = await axios.get(`${BASE_URL}/admin/balance_check`);
         
-        if (result.data) {
+        console.log(result.data); // For debugging
+
+        if (result.data && result.data.currentBalance !== undefined) {
           setBBPSBalance(result.data.currentBalance);
         } else {
-          setBBPSBalance('Error');
-          console.error('Wallet Balance Error:', result.message);
+          setBBPSBalance("Error");
+          console.error("Wallet Balance Error: Unexpected response format", result.data);
         }
       } catch (error) {
-        setBBPSBalance('Error');
-        console.error('Wallet Balance Fetch Error:', error);
+        setBBPSBalance("Error");
+        console.error("Wallet Balance Fetch Error:", error);
       } finally {
         setIsLoadingWallet(false);
       }
@@ -39,6 +40,7 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }) => {
 
     fetchBBSBalance();
   }, []);
+  
   useEffect(() => {
     const fetchWalletBalance = async () => {
       try {
