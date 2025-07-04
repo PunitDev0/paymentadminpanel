@@ -20,7 +20,7 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }) => {
     const fetchBBSBalance = async () => {
       try {
         setIsLoadingWallet(true);
-        const result = axios.get('balance_check')
+        const result = axios.get(`${BASE_URL}/admin/balance_check`)
         console.log(result);
         
         if (result.data) {
