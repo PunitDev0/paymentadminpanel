@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { ResponsiveContainer, LineChart, BarChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Cell } from 'recharts';
-import { Calendar, DollarSign, Phone, Zap, ArrowDown, ArrowUp, Filter } from 'lucide-react';
+import { Calendar, DollarSign, Phone, Zap, ArrowDown, ArrowUp, Filter, Percent } from 'lucide-react';
 import { OperatorList, Recharge_Transaction } from '@/lib/apis';
 
 const RechargeDashboard = () => {
   const [operators, setOperators] = useState([]);
   const [rechargeTransaction, setRechargeTransaction] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
-  const [filter, setFilter] = useState('All'); // Changed default to 'All'
+  const [filter, setFilter] = useState('All');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [loading, setLoading] = useState(false);
@@ -102,7 +102,6 @@ const RechargeDashboard = () => {
   // Calculate metrics
   const today = new Date().toISOString().split('T')[0];
   const totalRecharge = filteredData.length > 0 ? filteredData.reduce((sum, transaction) => sum + parseFloat(transaction.amount || 0), 0) : 0;
-
   const yesterdayTotalRecharge = rechargeTransaction
     .filter((transaction) => transaction.created_at < new Date(today))
     .reduce((sum, transaction) => sum + parseFloat(transaction.amount || 0), 0);
@@ -127,6 +126,19 @@ const RechargeDashboard = () => {
 
   const comparisonRateSuccess = (successRateTillToday - successRateTillYesterday).toFixed(2);
 
+  // Commission Metrics
+  const totalCommission = filteredData.length > 0 ? filteredData.reduce((sum, transaction) => sum + parseFloat(transaction.commission_amount || 0), 0) : 0;
+  const yesterdayTotalCommission = rechargeTransactionTillYesterday.length > 0 ? rechargeTransactionTillYesterday.reduce((sum, transaction) => sum + parseFloat(transaction.commission_amount || 0), 0) : 0;
+  const comparisonRateCommission = yesterdayTotalCommission
+    ? ((totalCommission - yesterdayTotalCommission) / yesterdayTotalCommission) * 100
+    : 0;
+
+  const totalAvgCommission = filteredData.length > 0 ? totalCommission / filteredData.length : 0;
+  const totalAvgCommissionTillYesterday = rechargeTransactionTillYesterday.length > 0 ? yesterdayTotalCommission / rechargeTransactionTillYesterday.length : 0;
+  const comparisonRateAvgCommission = totalAvgCommissionTillYesterday
+    ? ((totalAvgCommission - totalAvgCommissionTillYesterday) / totalAvgCommissionTillYesterday) * 100
+    : 0;
+
   const processTransactionData = () => {
     if (!filteredData || filteredData.length === 0) {
       return [];
@@ -143,6 +155,7 @@ const RechargeDashboard = () => {
       );
 
       const totalAmount = dateTransactions.reduce((sum, tx) => sum + parseFloat(tx.amount || 0), 0) || 0;
+      const totalCommission = dateTransactions.reduce((sum, tx) => sum + parseFloat(tx.commission_amount || 0), 0) || 0;
       const successCount = dateTransactions.filter(tx => tx.status === 'success').length || 0;
       const totalCount = dateTransactions.length || 0;
       const successRate = totalCount > 0 ? (successCount / totalCount) * 100 : 0;
@@ -151,6 +164,7 @@ const RechargeDashboard = () => {
       return {
         date,
         totalAmount,
+        totalCommission,
         successRate,
         avgTicket,
       };
@@ -163,12 +177,15 @@ const RechargeDashboard = () => {
 
   // Top Operators data for export
   const topOperatorsData = operators.map(operator => {
-    const totalAmount = filteredData
-      .filter((transaction) => String(transaction.operator) === String(operator.operator_id))
-      .reduce((sum, transaction) => sum + Number(transaction.amount || 0), 0) || 0;
+    const operatorTransactions = filteredData.filter((transaction) => String(transaction.operator) === String(operator.operator_id));
+    const totalAmount = operatorTransactions.reduce((sum, transaction) => sum + Number(transaction.amount || 0), 0) || 0;
+    const totalCommission = operatorTransactions.reduce((sum, transaction) => sum + Number(transaction.commission_amount || 0), 0) || 0;
+    const avgCommissionPercentage = operatorTransactions.length > 0 ? operatorTransactions.reduce((sum, transaction) => sum + Number(transaction.our_commission || 0), 0) / operatorTransactions.length : 0;
     return {
       operator_name: operator.operator_name,
       total_amount: totalAmount,
+      total_commission: totalCommission,
+      avg_commission_percentage: avgCommissionPercentage,
     };
   });
 
@@ -177,7 +194,9 @@ const RechargeDashboard = () => {
     const summaryDataRows = [
       ['Total Recharges', totalRecharge.toFixed(2), yesterdayTotalRecharge.toFixed(2), comparisonRate.toFixed(2)],
       ['Total Revenue', totalRecharge.toFixed(2), yesterdayTotalRecharge.toFixed(2), comparisonRate.toFixed(2)],
+      ['Total Commission', totalCommission.toFixed(2), yesterdayTotalCommission.toFixed(2), comparisonRateCommission.toFixed(2)],
       ['Avg Ticket Size', totalAvgTicket.toFixed(2), totalAvgTicketTillYesterday.toFixed(2), comparisonRateAvg.toFixed(2)],
+      ['Avg Commission', totalAvgCommission.toFixed(2), totalAvgCommissionTillYesterday.toFixed(2), comparisonRateAvgCommission.toFixed(2)],
       ['Success Rate', successRateTillToday.toFixed(2), successRateTillYesterday.toFixed(2), comparisonRateSuccess],
     ];
 
@@ -186,18 +205,20 @@ const RechargeDashboard = () => {
     const topOperatorsRows = topOperatorsData.map(operator => [
       operator.operator_name,
       operator.total_amount.toFixed(2),
+      operator.total_commission.toFixed(2),
+      operator.avg_commission_percentage.toFixed(2),
     ]);
 
-    const topOperatorsHeader = ['Operator Name', 'Total Amount (₹)'];
+    const topOperatorsHeader = ['Operator Name', 'Total Amount (₹)', 'Total Commission (₹)', 'Avg Commission (%)'];
 
     const csv = [
       ['Summary Metrics'],
-      ...summaryDataRows,
       summaryHeader,
+      ...summaryDataRows,
       [''],
       ['Top Operators'],
-      ...topOperatorsRows,
       topOperatorsHeader,
+      ...topOperatorsRows,
     ]
       .map(row => row.map(cell => `"${cell}"`).join(','))
       .join('\n');
@@ -280,7 +301,7 @@ const RechargeDashboard = () => {
         <div className="text-center p-8 text-gray-500">Loading...</div>
       ) : (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6">
             <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-200">
               <div className="flex items-center justify-between mb-4">
                 <div className="p-3 bg-indigo-100 text-indigo-600 rounded-md">
@@ -328,6 +349,31 @@ const RechargeDashboard = () => {
               <p className="text-2xl sm:text-3xl font-bold text-gray-800">₹{totalRecharge.toLocaleString()}</p>
               <p className="text-sm text-gray-500 mt-2">
                 vs. yesterday (₹{yesterdayTotalRecharge.toLocaleString()})
+              </p>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-200">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 bg-blue-100 text-blue-600 rounded-md">
+                  <Percent className="h-6 w-6" />
+                </div>
+                <span
+                  className={`text-sm font-medium px-2.5 py-0.5 rounded-full flex items-center ${
+                    comparisonRateCommission < 0 ? 'text-white bg-red-500' : 'text-white bg-green-500'
+                  }`}
+                >
+                  {comparisonRateCommission < 0 ? (
+                    <ArrowDown className="h-3 w-3 mr-1" />
+                  ) : (
+                    <ArrowUp className="h-3 w-3 mr-1" />
+                  )}
+                  {comparisonRateCommission.toFixed(2)}%
+                </span>
+              </div>
+              <h3 className="text-lg font-medium text-gray-500">Total Commission</h3>
+              <p className="text-2xl sm:text-3xl font-bold text-gray-800">₹{totalCommission.toLocaleString()}</p>
+              <p className="text-sm text-gray-500 mt-2">
+                vs. yesterday (₹{yesterdayTotalCommission.toLocaleString()})
               </p>
             </div>
 
@@ -410,6 +456,31 @@ const RechargeDashboard = () => {
               </div>
 
               <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 overflow-hidden">
+                <h2 className="text-lg font-semibold text-gray-800 mb-4">Commission Trend</h2>
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <XAxis dataKey="date" stroke="#6b7280" tick={{ fontSize: 12 }} />
+                      <YAxis stroke="#6b7280" tick={{ fontSize: 12 }} tickFormatter={(value) => `₹${value.toLocaleString()}`} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend wrapperStyle={{ fontSize: 12 }} />
+                      <Line
+                        type="monotone"
+                        dataKey="totalCommission"
+                        stroke="#3b82f6"
+                        strokeWidth={3}
+                        dot={{ r: 5, fill: '#3b82f6', stroke: '#fff', strokeWidth: 2 }}
+                        activeDot={{ r: 8 }}
+                        animationDuration={800}
+                        name="Total Commission"
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 overflow-hidden">
                 <h2 className="text-lg font-semibold text-gray-800 mb-4">Success Rate by Day</h2>
                 <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
@@ -465,24 +536,21 @@ const RechargeDashboard = () => {
             <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg font-medium text-gray-800">Top Operators</h3>
-                atri
                 <select
                   className="border border-gray-200 rounded-lg bg-white text-sm p-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   aria-label="Sort top operators"
                 >
                   <option value="volume">By Volume</option>
                   <option value="revenue" selected>By Revenue</option>
+                  <option value="commission">By Commission</option>
                 </select>
               </div>
               <div className="space-y-4">
                 {operators && operators.length > 0 ? (
-                  operators.map((operator) => {
-                    const totalAmount = filteredData
-                      .filter((transaction) => String(transaction.operator) === String(operator.operator_id))
-                      .reduce((sum, transaction) => sum + Number(transaction.amount || 0), 0) || 0;
-
-                    return (
-                      <div key={operator.id || operator.operator_id} className="flex items-center justify-between">
+                  topOperatorsData
+                    .sort((a, b) => b.total_amount - a.total_amount) // Default sort by revenue
+                    .map((operator) => (
+                      <div key={operator.operator_name} className="flex items-center justify-between">
                         <div className="flex items-center">
                           <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 mr-3">
                             <span className="font-medium">
@@ -491,12 +559,14 @@ const RechargeDashboard = () => {
                           </div>
                           <div>
                             <p className="font-medium text-gray-800">{operator.operator_name}</p>
+                            <p className="text-sm text-gray-500">
+                              Commission: ₹{operator.total_commission.toLocaleString()} ({operator.avg_commission_percentage.toFixed(2)}%)
+                            </p>
                           </div>
                         </div>
-                        <p className="font-bold text-gray-800">₹{totalAmount.toLocaleString()}</p>
+                        <p className="font-bold text-gray-800">₹{operator.total_amount.toLocaleString()}</p>
                       </div>
-                    );
-                  })
+                    ))
                 ) : (
                   <p className="text-sm text-gray-500">No operators available.</p>
                 )}
@@ -532,6 +602,12 @@ const RechargeDashboard = () => {
                       Amount
                     </th>
                     <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Commission (%)
+                    </th>
+                    <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Commission Amount
+                    </th>
+                    <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
                     </th>
                     <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -557,6 +633,12 @@ const RechargeDashboard = () => {
                           <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             ₹{parseFloat(transaction.amount).toFixed(2)}
                           </td>
+                          <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {parseFloat(transaction.our_commission).toFixed(2)}%
+                          </td>
+                          <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            ₹{parseFloat(transaction.commission_amount).toFixed(2)}
+                          </td>
                           <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                             <span
                               className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
@@ -575,7 +657,7 @@ const RechargeDashboard = () => {
                       ))
                   ) : (
                     <tr>
-                      <td colSpan="6" className="px-4 sm:px-6 py-4 text-center text-sm text-gray-500">
+                      <td colSpan="8" className="px-4 sm:px-6 py-4 text-center text-sm text-gray-500">
                         No transactions found for this period.
                       </td>
                     </tr>

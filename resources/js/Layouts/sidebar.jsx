@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
-import { ChevronDown, ChevronRight, LayoutDashboard, ChartPie, Code, Building, Drill, Cog, CalendarRange, Users, Banknote, Import, Network } from 'lucide-react';
+import { ChevronDown, ChevronRight, LayoutDashboard, ChartPie, Code, Building, Drill, Cog, CalendarRange, Users, Banknote, Import, Network, User, List } from 'lucide-react';
 
 const BASE_URL = import.meta.env.VITE_APP_SERVER === "PRODUCTION"
   ? "https://banking.nikatby.com/admin/public"
@@ -78,13 +78,13 @@ export const sidebarRoutes = [
       {
         id: "roles",
         title: "Roles",
-        path: `${BASE_URL}/admin/displayroles`,
+        path: `${BASE_URL}/admin/roles`,
         permissions: ["admin"],
       },
       {
         id: "permissions",
         title: "Permissions",
-        path: `${BASE_URL}/admin/displaypermissions`,
+        path: `${BASE_URL}/admin/user_permissions`,
         permissions: ["admin"],
       },
     ],
@@ -115,6 +115,27 @@ export const sidebarRoutes = [
     title: "Whitelisting Ips",
     path: `${BASE_URL}/admin/whitelisted-ips`,
     icon: <Network className="h-5 w-5" />,
+    permissions: ["admin"],
+  },
+  {
+    id: "Users",
+    title: "Create Users",
+    path: `${BASE_URL}/admin/add_user`,
+    icon: <User className="h-5 w-5" />,
+    permissions: ["admin"],
+  },
+  {
+    id: "Users",
+    title: "Users List",
+    path: `${BASE_URL}/admin/users_list`,
+    icon: <List className="h-5 w-5" />,
+    permissions: ["admin"],
+  },
+  {
+    id: "Api Logs",
+    title: "Api Logs",
+    path: `${BASE_URL}/admin/api_logs`,
+    icon: <List className="h-5 w-5" />,
     permissions: ["admin"],
   },
 ];

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
+use App\Models\UserCommission;
 use App\Models\commissions\RechargeCommission;
 use App\Models\commissions\ElectricityCommission;
 use App\Models\commissions\DigitalvoucherCommission;
@@ -19,14 +21,20 @@ use Inertia\Inertia;
 class CommissionController extends Controller
 {
     /**
-     * Fetch all commissions.
+     * Render the commission management page.
+     *
+     * @return \Inertia\Response
+     */
+    public function commission()
+    {
+        return Inertia::render('Admin/commission');
+    }
+
+    /**
+     * Fetch all default commissions.
      *
      * @return \Illuminate\Http\JsonResponse
      */
-
-     public  function  commission (){
-        return Inertia::render('Admin/commission');
-    }
     public function getCommissions()
     {
         try {
@@ -140,7 +148,7 @@ class CommissionController extends Controller
     }
 
     /**
-     * Update our_commission for a specific commission type.
+     * Update default commissions for a specific commission type.
      *
      * @param Request $request
      * @param string $type
@@ -225,9 +233,119 @@ class CommissionController extends Controller
                     return response()->json(['error' => 'Invalid commission type'], 400);
             }
 
-            return response()->json(['message' => 'Our commissions updated successfully'], 200);
+            return response()->json(['message' => 'Default commissions updated successfully'], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to update commissions: ' . $e->getMessage()], 500);
         }
+    }
+
+    /**
+     * Fetch all users for the dropdown.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getUsers()
+    {
+        try {
+            $users = User::select('id', 'name', 'email')->get()->map(function ($user) {
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                ];
+            })->toArray();
+
+            return response()->json($users, 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to fetch users: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Fetch user-specific commissions for a given user.
+     *
+     * @param int $userId
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getUserCommissions($userId)
+    {
+        try {
+            $user = User::findOrFail($userId);
+            $userCommissions = UserCommission::where('user_id', $userId)->get()->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'commission_type' => $item->commission_type,
+                    'commission_id' => $item->commission_id,
+                    'user_commission' => $item->user_commission,
+                ];
+            })->toArray();
+
+            // Fetch default commissions for comparison or fallback
+            $defaultCommissions = $this->getCommissions()->getData(true);
+
+            return response()->json([
+                'user_commissions' => $userCommissions,
+                'default_commissions' => $defaultCommissions,
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                ],
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to fetch user commissions: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Update user-specific commissions.
+     *
+     * @param Request $request
+     * @param int $userId
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function updateUserCommissions(Request $request, $userId)
+    {
+        $validator = Validator::make($request->all(), [
+            '*.commission_type' => 'required|string|in:recharge,electricity,digital_voucher,datacard,gas_fastag,cms,challan,cable,broadband,bank',
+            '*.commission_id' => 'required|integer',
+            '*.user_commission' => 'required|numeric|min:0',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 422);
+        }
+
+        try {
+            $user = User::findOrFail($userId);
+            $data = $request->all();
+
+            foreach ($data as $commission) {
+                UserCommission::updateOrCreate(
+                    [
+                        'user_id' => $userId,
+                        'commission_type' => $commission['commission_type'],
+                        'commission_id' => $commission['commission_id'],
+                    ],
+                    [
+                        'user_commission' => $commission['user_commission'],
+                    ]
+                );
+            }
+
+            return response()->json(['message' => 'User commissions updated successfully'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to update user commissions: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Render the commission management page.
+     *
+     * @return \Inertia\Response
+     */
+    public function index()
+    {
+        return Inertia::render('Admin/Commission');
     }
 }

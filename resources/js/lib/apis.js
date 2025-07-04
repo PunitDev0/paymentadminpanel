@@ -166,8 +166,8 @@ export const beneficiarylist2 = async () => {
 };
 
 // Permissions
-export const getPermissions = async () => {
-    const response = await axios.post(`${BASE_URL}/admin/permissions`);
+export const getPermissions = async (id) => {
+    const response = await axios.post(`${BASE_URL}/roles/${id}/permissions`);
     return response.data.data;
 };
 
@@ -550,4 +550,86 @@ export const ipstatustoggle = async (id) => {
     } catch (error) {
         throw new Error(error.response?.data?.error || 'Failed to update status');
     }
+};
+
+
+
+
+export const addUsers = async (data) => {
+    try {
+      const response = await axios.post(`${BASE_URL}/admin/register`, data);    
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      throw error;
+    }
+  };
+  
+  export const fetchUsers = async () => {
+    try {
+      const response = await axios.get(`${BASE_URL}/admin/users/list`);    
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      throw error;
+    }
+  };
+  
+  export const updateUser = async (id, data) => {
+    try {
+      const response = await axios.put(`${BASE_URL}/admin/users/update/${id}`, data);    
+      return response.data.user;
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      throw error;
+    }
+  };
+  export const deleteUser = async (id,) => {
+    try {
+      const response = await axios.delete(`${BASE_URL}/admin/users/delete/${id}`);    
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      throw error;
+    }
+  };
+
+
+
+export const fetchPermissions = async (userId) => {
+  const response = await axios.get(`${BASE_URL}/permissions/${userId}`);
+  return response.data;
+};
+
+export const updatePermissions = async (userId, permissions) => {
+  const response = await axios.post(`${BASE_URL}/permissions/${userId}`, { permissions });
+  return response.data;
+};
+
+
+
+
+  export const storeUserRole = async  (name)=>{
+    try {
+        const response = await axios.post(`/roles/create`,{
+            name : name
+        }); 
+        return response.data;
+    } catch (error) {
+        console.error('Error storing user role:', error);
+        throw error;
+    }
+}
+
+
+
+export const getUserRoles = async () => {
+  try {
+    const response = await axios.get(`/roles/list`);
+    
+    return response.data.roles;
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+    throw error;
+  }
 };

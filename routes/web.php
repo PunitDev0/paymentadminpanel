@@ -13,8 +13,13 @@ use App\Http\Controllers\CMSController;
 use App\Http\Controllers\IpWhitelistController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminUtilityOperatorController;
+use App\Http\Controllers\ApiLogsController;
+use App\Http\Controllers\BillController;
 use App\Http\Controllers\CommissionsController;
 use App\Http\Controllers\OnBoardRequestController;
+use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\RechargeTransactionController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\WhitelistingIpsController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -31,8 +36,39 @@ Route::get('/user', [AuthController::class, 'getAuthenticatedUser'])->name('user
 // Admin-Prefixed Authenticated Routes (Require authentication)
 // Dashboard
 Route::get('/', [AdminController::class, 'dashboard'])->name('admin.dashboard')->middleware('auth:web');
-Route::middleware('auth:web')->prefix('admin')->group(function () {
+Route::prefix('admin')->group(function () {
     // Profile Routes
+    Route::get('/add_user', function () {
+        return Inertia::render('Admin/CreateUser');
+    });
+    Route::get('/users_list', function () {
+        return Inertia::render('Admin/All_Users');
+    });
+    Route::get('/bbps_bills', function () {
+        return Inertia::render('Admin/BBps_bills');
+    });
+     // Role Routes
+     Route::get('/roles', function () {
+        return Inertia::render('Admin/roles&permissions/roles');
+    })->name('admin.roles');
+
+    Route::get('/user_permissions', function () {
+        return Inertia::render('Admin/roles&permissions/permissions');
+    })->name('admin.roles');
+
+    Route::get('/api_logs', function () {
+        return Inertia::render('Admin/api_logs/Api_Logs');
+    })->name('admin.roles');
+
+    Route::get('/bills', [BillController::class, 'index']);
+
+    Route::post('/register', [UserController::class, 'store']);
+    Route::get('/users/list', [UserController::class, 'userLists']);
+    Route::put('/users/update/{id}', [UserController::class, 'updateUser']);
+    Route::delete('/users/delete/{id}', [UserController::class, 'deleteUser']);
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -58,7 +94,7 @@ Route::middleware('auth:web')->prefix('admin')->group(function () {
     // Recharge Routes
     Route::get('/recharge/dashboard', [AdminController::class, 'recharge'])->name('admin.recharge');
     Route::post('/recharge/operators', [AdminController::class, 'operatorlistfetch'])->name('admin.operatorlist');
-    Route::post('/recharge/transaction', [AdminController::class, 'rechargetransaction'])->name('admin.rechargetransaction');
+    Route::post('/recharge/transaction', [RechargeTransactionController::class, 'rechargetransaction'])->name('admin.rechargetransaction');
     Route::post('/recharge/commission/fetch', [AdminController::class, 'rechargecommission'])->name('admin.recharge.commission.fetch');
     Route::put('/recharge/commission/{id}', [AdminController::class, 'updateRechargeCommission'])->name('admin.recharge.commission.update');
 
@@ -93,7 +129,9 @@ Route::middleware('auth:web')->prefix('admin')->group(function () {
     Route::put('/permissions/{id}', [MainController::class, 'updatepermission'])->name('admin.permissions.update');
     Route::delete('/permissions/{id}', [MainController::class, 'deletepermission'])->name('admin.permissions.delete');
 
-    // Role Routes
+   
+
+    Route::post('/roles', [MainController::class, 'getRoles'])->name('admin.roles');
     Route::post('/roles', [MainController::class, 'getRoles'])->name('admin.roles');
     Route::post('/roles/add', [MainController::class, 'addRole'])->name('admin.roles.add');
     Route::put('/roles/{id}', [MainController::class, 'updateRole'])->name('admin.roles.update');
@@ -142,12 +180,13 @@ Route::middleware('auth:web')->prefix('admin')->group(function () {
     Route::patch('/whitelisted-ips/{whitelistingIp}/toggle-status', [WhitelistingIpsController::class, 'toggleStatus']);
 
     Route::get('/onboard-requests', [OnBoardRequestController::class, 'index']);
-Route::post('/onboard-requests/{id}/status', [OnBoardRequestController::class, 'updateStatus']);
+    Route::post('/onboard-requests/{id}/status', [OnBoardRequestController::class, 'updateStatus']);
 
 
-Route::get('/commissions', [CommissionController::class, 'getCommissions'])->name('commissions.get');
-Route::post('/commissions/{type}', [CommissionController::class, 'updateCommissions'])->name('commissions.update');
+    Route::get('/commissions', [CommissionController::class, 'getCommissions'])->name('commissions.get');
+    Route::post('/commissions/{type}', [CommissionController::class, 'updateCommissions'])->name('commissions.update');
 
+    Route::get('/api-logs', [ApiLogsController::class, 'index'])->name('commissions.get');
 });
 
 // Authentication Routes
@@ -155,3 +194,15 @@ Route::post('/commissions/{type}', [CommissionController::class, 'updateCommissi
 
 
 
+Route::get('/users', [PermissionController::class, 'getUsers']);
+Route::get('/permissions/{userId}', [PermissionController::class, 'index']);
+Route::post('/permissions/{userId}', [PermissionController::class, 'update']);
+
+// Route::get('/', [CommissionController::class, 'commission'])->name('commissions.index');
+Route::get('/data', [CommissionController::class, 'getCommissions'])->name('commissions.data');
+Route::put('/{type}', [CommissionController::class, 'updateCommissions'])->name('commissions.update');
+
+// User-specific commission routes
+Route::get('/users', [CommissionController::class, 'getUsers'])->name('commissions.users');
+Route::get('/users/{userId}/data', [CommissionController::class, 'getUserCommissions'])->name('user.commissions.data');
+Route::put('/users/{userId}', [CommissionController::class, 'updateUserCommissions'])->name('user.commissions.update');
