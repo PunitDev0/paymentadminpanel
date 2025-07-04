@@ -20,7 +20,7 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }) => {
     const fetchBBSBalance = async () => {
       try {
         setIsLoadingWallet(true);
-        const result = axios.get('https://banking.nikatby.com/admin/public/admin/balance_check')
+        const result = axios.get('balance_check')
         console.log(result);
         
         if (result.data) {
