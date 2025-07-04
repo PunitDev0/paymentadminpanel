@@ -14,6 +14,7 @@ use App\Http\Controllers\IpWhitelistController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminUtilityOperatorController;
 use App\Http\Controllers\ApiLogsController;
+use App\Http\Controllers\BalanceCheck;
 use App\Http\Controllers\BillController;
 use App\Http\Controllers\CommissionsController;
 use App\Http\Controllers\OnBoardRequestController;
@@ -187,6 +188,7 @@ Route::prefix('admin')->group(function () {
     Route::post('/commissions/{type}', [CommissionController::class, 'updateCommissions'])->name('commissions.update');
 
     Route::get('/api-logs', [ApiLogsController::class, 'index'])->name('commissions.get');
+    Route::get('/balance_check', [BalanceCheck::class, 'balanceCheck']);
 });
 
 // Authentication Routes
