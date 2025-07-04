@@ -21,11 +21,11 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }) => {
       try {
         setIsLoadingWallet(true);
         const result = await axios.get(`${BASE_URL}/admin/balance_check`);
-        
-        console.log(result.data); // For debugging
 
-        if (result.data && result.data.currentBalance !== undefined) {
-          setBBPSBalance(result.data.currentBalance);
+        console.log(result.data); // Logs: { status: true, data: { currentBalance: "100.00" } }
+
+        if (result.data && result.data.data?.currentBalance !== undefined) {
+          setBBPSBalance(result.data.data.currentBalance);
         } else {
           setBBPSBalance("Error");
           console.error("Wallet Balance Error: Unexpected response format", result.data);
@@ -40,7 +40,7 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }) => {
 
     fetchBBSBalance();
   }, []);
-  
+
   useEffect(() => {
     const fetchWalletBalance = async () => {
       try {
@@ -196,7 +196,7 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }) => {
           </div>
         </div>
 
-        {/* Notifications */} 
+        {/* Notifications */}
         {/* <button
           className="p-2 rounded-full hover:bg-gray-100 relative flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors duration-200"
           aria-label="Notifications"
