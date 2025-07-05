@@ -495,7 +495,7 @@ export const balanceApi = {
   // New functions for payment requests
   export const getAllPaymentRequests = async () => {
     try {
-      const response = await axios.get('/admin/payment-requests'); // No baseURL
+      const response = await axios.get(`${BASE_URL}/admin/payment-requests`); // No baseURL
       console.log(response.data);
       return response.data;
     } catch (error) {
